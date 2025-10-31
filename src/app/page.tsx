@@ -1,3 +1,4 @@
+export const revalidate = 0;
 import RankingTable from './components/RankingTable';
 import GameInput from './components/GameInput';
 import RecentGames from './components/RecentGames';
