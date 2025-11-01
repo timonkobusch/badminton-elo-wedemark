@@ -22,7 +22,7 @@ const GameInput = ({ users }: { users: string[] }) => {
         resolver: zodResolver(gameSchema),
         mode: 'onSubmit',
         defaultValues: {
-            teamSize: 'single',
+            teamSize: 1,
             gamesCount: 3,
             matchResult: '2-0',
             players: { team1: [], team2: [] },
@@ -84,7 +84,7 @@ const GameInput = ({ users }: { users: string[] }) => {
                 name="teamSize"
                 render={({ field }) => (
                     <div className="flex space-x-4 mb-4">
-                        {['single', 'double'].map((option) => (
+                        {[1, 2].map((option) => (
                             <button
                                 key={option}
                                 type="button"
@@ -93,7 +93,7 @@ const GameInput = ({ users }: { users: string[] }) => {
                                     field.value === option ? 'bg-primary text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                 }`}
                             >
-                                {option === 'single' ? 'Einzel' : 'Doppel'}
+                                {option === 1 ? 'Einzel' : 'Doppel'}
                             </button>
                         ))}
                     </div>
@@ -107,9 +107,9 @@ const GameInput = ({ users }: { users: string[] }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 {/* Team 1 */}
                 <div>
-                    <h3 className="text-lg font-medium text-gray-700 mb-3">{teamSize === 'single' ? 'Spieler 1' : 'Team 1'}</h3>
+                    <h3 className="text-lg font-medium text-gray-700 mb-3">{teamSize === 1 ? 'Spieler 1' : 'Team 1'}</h3>
                     <div className="space-y-3">
-                        {teamSize === 'single' ? (
+                        {teamSize === 1 ? (
                             <Controller
                                 control={control}
                                 name="players.team1"
@@ -181,9 +181,9 @@ const GameInput = ({ users }: { users: string[] }) => {
 
                 {/* Team 2 */}
                 <div>
-                    <h3 className="text-lg font-medium text-gray-700 mb-3">{teamSize === 'single' ? 'Spieler 2' : 'Team 2'}</h3>
+                    <h3 className="text-lg font-medium text-gray-700 mb-3">{teamSize === 1 ? 'Spieler 2' : 'Team 2'}</h3>
                     <div className="space-y-3">
-                        {teamSize === 'single' ? (
+                        {teamSize === 1 ? (
                             <Controller
                                 control={control}
                                 name="players.team2"

@@ -13,12 +13,17 @@ export async function insertGame(formData: z.infer<typeof gameSchema>) {
 
     const data = parsed.data;
 
+    const scoreTeam1 = data.matchResult.split('-')[0];
+    const scoreTeam2 = data.matchResult.split('-')[1];
+
     const newGame: Omit<IGame, 'id' | 'created_at'> = {
-        teamSize: data.teamSize,
-        gamesCount: data.gamesCount,
-        matchResult: data.matchResult,
-        playersTeamOne: data.players.team1,
-        playersTeamTwo: data.players.team2,
+        team_size: data.teamSize,
+        team_one_players: data.players.team1,
+        team_two_players: data.players.team2,
+        team_one_score: parseInt(scoreTeam1),
+        team_two_score: parseInt(scoreTeam2),
+        game_count: data.gamesCount,
+        winner_team: parseInt(scoreTeam1) > parseInt(scoreTeam2) ? 'team_one' : 'team_two',
     };
 
     const { error } = await supabase.from('games').insert(newGame);
@@ -35,20 +40,39 @@ export async function getGames() {
     const { data, error }: { data: IGame[] | null; error: PostgrestError | null } = await supabase
         .from('games')
         .select('*')
-        .order('created_at', { ascending: false })
-        .limit(10);
+        .order('created_at', { ascending: false });
 
     if (error) {
         return { games: [], error: 'Fehler beim Laden der Spiele.' };
     }
+
+    if (!data) {
+        return { games: [], error: null };
+    }
+
     return { games: data || [], error: null };
 }
 
-export async function deleteGame(gameId: number) {
-    const { error } = await supabase.from('games').delete().eq('id', gameId);
-    if (error) {
+export async function softDeleteGame(gameId: number) {
+    // moving game to games_deleted
+    const { data: game, error: fetchError } = await supabase.from('games').select('*').eq('id', gameId).single();
+
+    if (fetchError || !game) {
+        return { error: 'Spiel konnte nicht gefunden werden.' };
+    }
+
+    const { error: insertError } = await supabase.from('games_deleted').insert([{ ...game }]);
+
+    if (insertError) {
+        console.log(insertError);
+        return { error: 'Fehler beim Verschieben in games_deleted.' };
+    }
+
+    const { error: deleteError } = await supabase.from('games').delete().eq('id', gameId);
+
+    if (deleteError) {
         return { error: 'Fehler beim Löschen des Spiels.' };
     }
 
-    return { message: 'Spiel erfolgreich gelöscht.' };
+    return { message: 'Spiel erfolgreich gelöscht und archiviert.' };
 }

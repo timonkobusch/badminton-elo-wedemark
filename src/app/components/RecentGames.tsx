@@ -1,71 +1,99 @@
 'use client';
 import { IGame } from '@/lib/interfaces/IGame';
-import { deleteGame } from '@/app/actions/games';
-import { useState, Fragment } from 'react';
+import { softDeleteGame } from '@/app/actions/games';
+import { useState } from 'react';
 
-const RecentGames = ({ games }: { games: IGame[] }) => {
+const RecentGames = ({ games: initialGames }: { games: IGame[] }) => {
+    const [games, setGames] = useState<IGame[]>(initialGames);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
 
     if (!games?.length) {
         return <div className="bg-white rounded-lg shadow-md p-6 text-gray-500 text-sm text-center">Keine Spiele vorhanden</div>;
     }
+
     const handleDelete = async (gameId: number) => {
         const confirmation = confirm('Möchten Sie dieses Spiel wirklich löschen?');
         if (!confirmation) return;
         setLoading(true);
-        const { error } = await deleteGame(gameId);
+        const { error } = await softDeleteGame(gameId);
         if (error) {
             setError(error);
-            setLoading(false);
         } else {
-            // Seite neu laden, um die Änderungen anzuzeigen
-            setLoading(false);
-            window.location.reload();
+            // Delete from grouped Games
+            setGames((prev) => prev.filter((g) => g.id !== gameId));
         }
+
+        setLoading(false);
     };
+
+    function groupByStrict<T>(array: readonly T[], keyFn: (item: T) => string): Record<string, T[]> {
+        return Object.groupBy(array, keyFn) as Record<string, T[]>;
+    }
+
+    const grouped = groupByStrict(games, (game) => new Date(game.created_at).toISOString().split('T')[0]);
+
+    const groupedGames = Object.entries(grouped)
+        .sort(([a], [b]) => (a < b ? 1 : -1))
+        .map(([date, games]) => ({ date, games }));
+
     return (
         <div className="bg-white rounded-lg shadow-md">
             <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-xl font-semibold text-gray-800">Letzte Spiele</h2>
+                <h2 className="text-xl font-semibold text-gray-800 inline pr-2">Spiele</h2>
+                <span className="text-gray-500 text-sm">Auf ein Spiel drücken, um es zu löschen</span>
+                {error && <div className="text-red-500 mb-2">{error}</div>}
+                {loading && <div className="px-6 py-4 text-center text-gray-500">Löschen...</div>}
             </div>
 
             <div className="divide-y divide-gray-200">
-                {games.map((game) => (
-                    <Fragment key={game.id}>
-                        {!loading && (
-                            <div className="px-6 py-4">
-                                {error && <div className="text-red-500 mb-2">{error}</div>}
-                                <div className="flex justify-between items-center mb-2">
-                                    <div className="flex-1 text-left">
-                                        <span className="font-medium bg-green-100 text-green-800 px-2 py-1 rounded-lg">
-                                            {game.playersTeamOne.join(' & ')}
-                                        </span>
+                {groupedGames.map(({ date, games }) => (
+                    <div key={date}>
+                        <div className="px-6 text-gray-500 pt-2 text-l">
+                            {new Date(games[0].created_at).toLocaleDateString('de-DE', {
+                                weekday: 'long',
+                                day: 'numeric',
+                                month: '2-digit',
+                                year: '2-digit',
+                            })}
+                        </div>
+                        {games.map((game) => (
+                            <div key={game.id} className="cursor-pointer" onClick={() => handleDelete(game.id)}>
+                                {!loading && (
+                                    <div className="px-6 py-2">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <div className="flex-1 text-left">
+                                                {game.winner_team === 'team_one' ? (
+                                                    <span className="font-medium border-green bg-green-100 border text-green-800 px-2 py-1 rounded-lg">
+                                                        {game.team_one_players.join(' & ')}
+                                                    </span>
+                                                ) : (
+                                                    <span className="font-normal border border-red text-red-800 px-2 py-1 rounded-lg">
+                                                        {game.team_one_players.join(' & ')}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <span className="text-md text-gray-700 mx-2">
+                                                {game.team_one_score} : {game.team_two_score}
+                                            </span>
+
+                                            <div className="flex-1 text-right">
+                                                {game.winner_team === 'team_two' ? (
+                                                    <span className="font-medium border-green bg-green-100 border text-green-800 px-2 py-1 rounded-lg">
+                                                        {game.team_two_players.join(' & ')}
+                                                    </span>
+                                                ) : (
+                                                    <span className="font-normal border border-red text-red-800 px-2 py-1 rounded-lg">
+                                                        {game.team_two_players.join(' & ')}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
-
-                                    <span className="text-sm text-gray-500 mx-2">vs</span>
-
-                                    <div className="flex-1 text-right">
-                                        <span className="font-medium bg-red-100 text-red-800 px-2 py-1 rounded-lg">
-                                            {game.playersTeamTwo.join(' & ')}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center justify-between text-sm text-gray-600 mt-1 px-1">
-                                    <button className="flex-1 text-primary m-0 text-left" onClick={() => handleDelete(game.id)}>
-                                        Löschen
-                                    </button>
-
-                                    <span className="flex-1 text-center font-mono text-gray-800 font-bold">{game.matchResult}</span>
-
-                                    <span className="flex-1 text-right text-gray-500">{new Date(game.created_at).toLocaleDateString('de-DE')}</span>
-                                </div>
+                                )}
                             </div>
-                        )}
-
-                        {loading && <div className="px-6 py-4 text-center text-gray-500">Löschen...</div>}
-                    </Fragment>
+                        ))}
+                    </div>
                 ))}
             </div>
         </div>

@@ -15,8 +15,8 @@ export default async function Home() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center py-6">
                         <div className="flex items-start flex-col">
-                            <h1 className="text-2xl font-bold text-gray-900">Badminton Rangliste</h1>
-                            <div className="italic text-gray-600">Wedemark</div>
+                            <h1 className="text-2xl font-bold text-primary">Badminton Rangliste</h1>
+                            <div className="text-gray-600">Wedemark</div>
                         </div>
                     </div>
                 </div>
@@ -37,7 +37,6 @@ export default async function Home() {
                     </div>
                 </div>
             )}
-            {/* Main Content */}
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div>

@@ -6,7 +6,7 @@ const playerNameSchema = z
     .refine((val) => val !== 'Auswählen', 'Bitte Spieler auswählen.');
 export const gameSchema = z
     .object({
-        teamSize: z.enum(['single', 'double']),
+        teamSize: z.union([z.literal(1), z.literal(2)]),
         gamesCount: z.union([z.literal(1), z.literal(3)]),
         matchResult: z.enum(['1-0', '0-1', '2-0', '2-1', '1-2']),
         players: z.object({
