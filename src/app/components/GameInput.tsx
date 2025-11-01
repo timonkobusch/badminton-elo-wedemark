@@ -7,6 +7,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { gameSchema } from '@/lib/definitions';
 import { insertGame } from '@/app/actions/games';
+import { useGamesStore } from '@/stores/useGamesStore';
 
 export type GameForm = z.infer<typeof gameSchema>;
 
@@ -28,7 +29,7 @@ const GameInput = ({ users }: { users: string[] }) => {
             players: { team1: [], team2: [] },
         },
     });
-
+    const { addGame } = useGamesStore();
     const [openAddPlayerModal, setOpenAddPlayerModal] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
@@ -45,13 +46,13 @@ const GameInput = ({ users }: { users: string[] }) => {
         startTransition(async () => {
             const result = await insertGame(data);
 
-            if (result?.error) {
+            if (result?.error || !result.data) {
                 setError(result.error);
             } else {
                 setSuccess(result.message || 'Spiel erfolgreich eingetragen.');
 
                 reset();
-                window.location.reload();
+                addGame(result.data);
             }
         });
     };

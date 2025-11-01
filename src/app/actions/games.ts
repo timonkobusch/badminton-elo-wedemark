@@ -26,14 +26,18 @@ export async function insertGame(formData: z.infer<typeof gameSchema>) {
         winner_team: parseInt(scoreTeam1) > parseInt(scoreTeam2) ? 'team_one' : 'team_two',
     };
 
-    const { error } = await supabase.from('games').insert(newGame);
+    const { data: result, error }: { data: IGame | null; error: PostgrestError | null } = await supabase
+        .from('games')
+        .insert(newGame)
+        .select()
+        .single();
 
-    if (error) {
+    if (error || !result) {
         console.error('Fehler beim Insert:', error);
         return { error: 'Fehler beim Speichern des Spiels.' };
     }
 
-    return { message: 'Spiel erfolgreich gespeichert.' };
+    return { data: result, message: 'Spiel erfolgreich gespeichert.' };
 }
 
 export async function getGames() {

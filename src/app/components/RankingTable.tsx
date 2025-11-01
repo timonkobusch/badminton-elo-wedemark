@@ -1,26 +1,18 @@
 'use client';
-import { IGame } from '@/lib/interfaces/IGame';
+import { useGamesStore } from '@/stores/useGamesStore';
+import calculateRankings from '@/lib/calculateRankings';
 
-const RANKINGS = [
-    {
-        name: 'Test',
-        elo: 1500,
-        wins: 2,
-        losses: 3,
-        winrate: 50,
-    },
-];
-
-const RankingTable = ({ games }: { games: IGame[] }) => {
+const RankingTable = () => {
+    const { games } = useGamesStore();
     if (!games.length) {
         return <div className="bg-white rounded-lg shadow-md p-6 text-gray-500 text-sm text-center">Noch keine Spiele vorhanden.</div>;
     }
+    const rankings = calculateRankings(games);
     return (
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                 <h2 className="text-xl font-semibold text-gray-800">Rangliste</h2>
             </div>
-
             <div className="overflow-x-auto">
                 <table className="w-full">
                     <thead className="bg-gray-50">
@@ -33,7 +25,7 @@ const RankingTable = ({ games }: { games: IGame[] }) => {
                     </thead>
 
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {RANKINGS.map((player, index) => (
+                        {rankings.map((player, index) => (
                             <tr key={player.name} className="hover:bg-gray-50">
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <span

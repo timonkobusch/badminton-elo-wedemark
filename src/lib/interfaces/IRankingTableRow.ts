@@ -1,7 +1,7 @@
 export interface IRankingTableRow {
     name: string;
+    elo: number;
     wins: number;
     losses: number;
-    ratio: string;
-    elo: number;
+    winrate: number;
 }
