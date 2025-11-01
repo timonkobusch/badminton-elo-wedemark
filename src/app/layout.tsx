@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-    title: 'Badminton Elo App',
-    description: 'Die Badminton Elo App für die Wedemark',
+    title: 'Badminton Wedemark',
+    description: 'Eine Webapp, um Spiele zu tracken',
 };
 
 export default function RootLayout({
