@@ -1,7 +1,6 @@
-// components/GameInput.jsx
 'use client';
 import AddPlayerForm from './AddPlayerForm';
-import { useEffect, useState, useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { z } from 'zod';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -56,9 +55,6 @@ const GameInput = ({ users }: { users: string[] }) => {
             }
         });
     };
-    useEffect(() => {
-        console.log(errors);
-    }, [errors]);
 
     return (
         <form
