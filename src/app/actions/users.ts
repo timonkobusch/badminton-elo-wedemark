@@ -2,6 +2,7 @@
 import { IUser } from '@/lib/interfaces/IUser';
 import { supabase } from '@/lib/supabase';
 import { PostgrestError } from '@supabase/supabase-js';
+import { revalidatePath } from 'next/cache';
 
 export async function createUser(username: string) {
     if (!username || username.trim() === '') {
@@ -11,6 +12,7 @@ export async function createUser(username: string) {
     if (error) {
         return { error: 'Fehler beim Erstellen des Benutzers' };
     }
+    revalidatePath('/');
     return { message: `Benutzer ${username} erfolgreich erstellt` };
 }
 
