@@ -22,7 +22,6 @@ const AdminPage = () => {
 
         if (success) {
             setIsAuthorized(true);
-            // Lade Daten nach erfolgreicher Authentifizierung
             const { users, error: usersError } = await getUsersAdmin(password);
             const { games, error: gamesError } = await getDeletedGames(password);
             if (usersError || gamesError) {
