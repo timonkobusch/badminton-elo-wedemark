@@ -8,4 +8,6 @@ export interface IGame {
     team_two_players: string[];
     team_two_score: number;
     winner_team: string;
+    deleted_at: Date | null;
+    season_id: number;
 }

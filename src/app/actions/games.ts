@@ -10,13 +10,24 @@ export async function insertGame(formData: z.infer<typeof gameSchema>) {
     if (!parsed.success) {
         return { error: `Ungültige Eingabe.` };
     }
+    // get latest season id by season.started_at
+    const { data: seasons, error: seasonError } = await supabase
+        .from('seasons')
+        .select('*')
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .single();
+
+    if (seasonError || !seasons) {
+        return { error: 'Fehler beim Abrufen der Saison.' };
+    }
 
     const data = parsed.data;
 
     const scoreTeam1 = data.matchResult.split('-')[0];
     const scoreTeam2 = data.matchResult.split('-')[1];
 
-    const newGame: Omit<IGame, 'id' | 'created_at'> = {
+    const newGame: Omit<IGame, 'id' | 'created_at' | 'deleted_at'> = {
         team_size: data.teamSize,
         team_one_players: data.players.team1,
         team_two_players: data.players.team2,
@@ -24,6 +35,7 @@ export async function insertGame(formData: z.infer<typeof gameSchema>) {
         team_two_score: parseInt(scoreTeam2),
         game_count: data.gamesCount,
         winner_team: parseInt(scoreTeam1) > parseInt(scoreTeam2) ? 'team_one' : 'team_two',
+        season_id: seasons.id,
     };
 
     const { data: result, error }: { data: IGame | null; error: PostgrestError | null } = await supabase
@@ -41,9 +53,22 @@ export async function insertGame(formData: z.infer<typeof gameSchema>) {
 }
 
 export async function getGames() {
+    const { data: seasons, error: seasonError } = await supabase
+        .from('seasons')
+        .select('*')
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .single();
+
+    if (seasonError || !seasons) {
+        return { games: [], error: 'Fehler beim Laden der Spiele.' };
+    }
+
     const { data, error }: { data: IGame[] | null; error: PostgrestError | null } = await supabase
         .from('games')
         .select('*')
+        .is('deleted_at', null)
+        .eq('season_id', seasons.id)
         .order('created_at', { ascending: false });
 
     if (error) {
@@ -58,24 +83,18 @@ export async function getGames() {
 }
 
 export async function softDeleteGame(gameId: number) {
-    // moving game to games_deleted
+    // mark game as deleted by setting deleted_at
     const { data: game, error: fetchError } = await supabase.from('games').select('*').eq('id', gameId).single();
 
     if (fetchError || !game) {
         return { error: 'Spiel konnte nicht gefunden werden.' };
     }
 
-    const { error: insertError } = await supabase.from('games_deleted').insert([{ ...game }]);
+    const { error: updateError } = await supabase.from('games').update({ deleted_at: new Date() }).eq('id', gameId);
 
-    if (insertError) {
-        console.log(insertError);
+    if (updateError) {
+        console.log(updateError);
         return { error: 'Fehler beim Verschieben in games_deleted.' };
-    }
-
-    const { error: deleteError } = await supabase.from('games').delete().eq('id', gameId);
-
-    if (deleteError) {
-        return { error: 'Fehler beim Löschen des Spiels.' };
     }
 
     return { message: 'Spiel erfolgreich gelöscht und archiviert.' };
