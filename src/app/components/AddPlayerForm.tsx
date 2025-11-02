@@ -33,8 +33,7 @@ const AddPlayerForm = ({
         } else {
             setSuccess(result.message || 'Spieler erfolgreich hinzugefügt!');
             setUsername('');
-            // Modal automatisch schließen nach 1 Sekunde
-            setTimeout(() => window.location.reload(), 1000);
+            setOpenAddPlayerModal(false);
         }
     };
 
