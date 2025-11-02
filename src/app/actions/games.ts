@@ -99,3 +99,49 @@ export async function softDeleteGame(gameId: number) {
 
     return { message: 'Spiel erfolgreich gelöscht und archiviert.' };
 }
+
+export async function getDeletedGames(password: string) {
+    if (password !== process.env.ADMIN_PASSWORD) {
+        return { games: [], error: 'Ungültiges Admin-Passwort' };
+    }
+    const { data, error }: { data: IGame[] | null; error: PostgrestError | null } = await supabase
+        .from('games')
+        .select('*')
+        .not('deleted_at', 'is', null)
+        .order('deleted_at', { ascending: false });
+    if (error) {
+        return { games: [], error: 'Fehler beim Laden der gelöschten Spiele.' };
+    }
+    return { games: data || [], error: null };
+}
+
+export async function restoreDeletedGame(gameId: number, password: string) {
+    if (password !== process.env.ADMIN_PASSWORD) {
+        return { error: 'Ungültiges Admin-Passwort' };
+    }
+    const { data: game, error: fetchError } = await supabase.from('games').select('*').eq('id', gameId).single();
+    if (fetchError || !game) {
+        return { error: 'Spiel konnte nicht gefunden werden.' };
+    }
+    const { error: updateError } = await supabase.from('games').update({ deleted_at: null }).eq('id', gameId);
+    if (updateError) {
+        console.log(updateError);
+        return { error: 'Fehler beim Wiederherstellen des Spiels.' };
+    }
+    return { message: `Spiel ${gameId} erfolgreich wiederhergestellt.` };
+}
+export async function hardDeleteGame(gameId: number, password: string) {
+    if (password !== process.env.ADMIN_PASSWORD) {
+        return { error: 'Ungültiges Admin-Passwort' };
+    }
+    const { data: game, error: fetchError } = await supabase.from('games').select('*').eq('id', gameId).single();
+    if (fetchError || !game) {
+        return { error: 'Spiel konnte nicht gefunden werden.' };
+    }
+    const { error: deleteError } = await supabase.from('games').delete().eq('id', gameId);
+    if (deleteError) {
+        console.log(deleteError);
+        return { error: 'Fehler beim endgültigen Löschen des Spiels.' };
+    }
+    return { message: `Spiel ${gameId} erfolgreich gelöscht.` };
+}
