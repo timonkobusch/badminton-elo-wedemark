@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { supabase } from '@/lib/supabase';
 import { IGame } from '@/lib/interfaces/IGame';
 import { PostgrestError } from '@supabase/supabase-js';
+import { revalidatePath } from 'next/cache';
 
 export async function insertGame(formData: z.infer<typeof gameSchema>) {
     const parsed = gameSchema.safeParse(formData);
@@ -48,7 +49,7 @@ export async function insertGame(formData: z.infer<typeof gameSchema>) {
         console.error('Fehler beim Insert:', error);
         return { error: 'Fehler beim Speichern des Spiels.' };
     }
-
+    revalidatePath('/');
     return { data: result, message: 'Spiel erfolgreich gespeichert.' };
 }
 
@@ -96,7 +97,7 @@ export async function softDeleteGame(gameId: number) {
         console.log(updateError);
         return { error: 'Fehler beim Verschieben in games_deleted.' };
     }
-
+    revalidatePath('/');
     return { message: 'Spiel erfolgreich gelöscht und archiviert.' };
 }
 
